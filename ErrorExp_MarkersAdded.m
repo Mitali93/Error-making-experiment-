@@ -1,4 +1,4 @@
-function [ME,workspaceStruct] = ErrorExp_MarkersAdded()
+function [ME,workspaceStruct] = ErrorExp_MarkersAdded(iseeg)
 
 workspaceStruct = struct;
 ME = [];
@@ -7,8 +7,8 @@ params = struct; % declare a parameter struct
 MultiCompatibility = 0;
 Screen('Preference', 'SkipSyncTests', 0);
 
-
-try
+% 
+% try
     %%%%%%%%%%%%%%%%%%%%%%%%%
     % GENERAL EXPERIMENT PARAMETERS
     % Time pressure values
@@ -134,12 +134,12 @@ try
     % example file: 006-20171106-1542 . subject code followed by date and time
     
     %% Connect to Net Station
-    %if iseeg
+    if iseeg
     ip = '172.29.27.157';
     port = '55513';
     Init_netStation(ip,port);
     % --------------------------
-    %end %iseeg
+    end %iseeg
     
     %run experiment
     s = MAinitGraphics();
@@ -163,36 +163,34 @@ try
     else
         KeyWait(2);
     end
-    %if iseeg
+    if iseeg
     NetStation('Event','BEGN', GetSecs, 0.001,'block', condition{1,1});
-    %end %iseeg
-    WaitSecs(0.5)
+    end %iseeg
+    WaitSecs(1)
     
     
     k='='; % display the equal sign from this variable
     
     Screen('TextSize', s.w ,70); %font size for the numbers
-    
-    for i=1:r % for each row of randomised problems, will display the
-        %1st column (op1) 2nd colummn(op2) and third column(result)
-        %sequentially
-        
-        
-        %eye blink prompt 1.5 seconds
+    %eye blink prompt 1.5 seconds
         StartDrawing(s);
         DrawImg(s,fix);
         EndDrawing(s);
-        %if iseeg
-        NetStation('Event','BLNK', GetSecs, 0.001,'blank', 100000, 'tral', i);
-        %end %iseeg
+        if iseeg
+        NetStation('Event','BLNK', GetSecs, 0.001,'blank', 100000, 'tral', n);
+        end %iseeg
         WaitSecs(params.eye);
-        
+    
+    for n=1:r % for each row of randomised problems, will display the
+        %1st column (op1) 2nd colummn(op2) and third column(result)
+        %sequentially
+ 
         %first operant 800ms
         StartDrawing(s);
-        CenterText(s,num2str(AllResults((i),2)),-30);
+        CenterText(s,num2str(AllResults((n),2)),-30);
         EndDrawing(s);
         %if iseeg
-        NetStation('Event','OPR1', GetSecs, 0.001,'op1',  AllResults(i,8), 'tral', i);
+        NetStation('Event','OPR1', GetSecs, 0.001,'op1',  AllResults(n,8), 'tral', n);
         %end %iseeg
         WaitSecs(params.op1);
         
@@ -200,11 +198,11 @@ try
         
         %second operant 800ms
         StartDrawing(s);
-        CenterText(s,num2str(AllResults((i),3)),-30);
+        CenterText(s,num2str(AllResults((n),3)),-30);
         EndDrawing(s);
-        %if iseeg
-        NetStation('Event','OPR2', GetSecs, 0.001,'op2',  AllResults(i,8), 'tral', i);
-        %end %iseeg
+        if iseeg
+        NetStation('Event','OPR2', GetSecs, 0.001,'op2',  AllResults(n,8), 'tral', n);
+        end %iseeg
         
         WaitSecs(params.op2);
         
@@ -217,9 +215,9 @@ try
             StartDrawing(s);
             CenterText(s,k,-30);
             EndDrawing(s);
-            %if iseeg
-            NetStation('Event','EQUL', GetSecs, 0.001,'sign',  AllResults(i,8), 'tral', i);
-            %end %iseeg
+            if iseeg
+            NetStation('Event','EQUL', GetSecs, 0.001,'sign',  AllResults(n,8), 'tral', n);
+            end %iseeg
             WaitSecs(params.tp1);
             
         elseif condition{1,1}=='TP2A' | condition{1,1}=='TP2B'
@@ -227,9 +225,9 @@ try
             StartDrawing(s);
             CenterText(s,k,-30);
             EndDrawing(s);
-            %if iseeg
-            NetStation('Event','EQUL', GetSecs, 0.001,'sign',  AllResults(i,8), 'tral', i);
-            %end %iseeg
+            if iseeg
+            NetStation('Event','EQUL', GetSecs, 0.001,'sign',  AllResults(n,8), 'tral', n);
+            end %iseeg
             WaitSecs(params.tp2);
             
         elseif condition{1,1}=='TP3A' | condition{1,1}=='TP3B'
@@ -237,31 +235,39 @@ try
             StartDrawing(s);
             CenterText(s,k,-30);
             EndDrawing(s);
-            %if iseeg
-            NetStation('Event','EQUL', GetSecs, 0.001,'sign',  AllResults(i,8), 'tral', i);
-            %end %iseeg
+            if iseeg
+            NetStation('Event','EQUL', GetSecs, 0.001,'sign',  AllResults(n,8), 'tral', n);
+            end %iseeg
             WaitSecs(params.tp3);
         end
         
-        %result should be displayed maximum for 1 sec. have to respond as soon as they can when
-        %they see this.
-        StartDrawing(s);
-        onset = GetSecs(); %starts timing this one second window that they have
-        CenterText(s,num2str(AllResults((i),4)),-30);
-        %if iseeg
-        NetStation('Event','ANSW', GetSecs, 0.001,'answ',  AllResults(i,8), 'tral', i);
-        %end %iseeg
-        EndDrawing(s)
-        
-        if MultiCompatibility
+         if MultiCompatibility
             KbQueueFlush(device,4);
         else
             PsychHID('KbQueueFlush'); %Flushes Buffer so only response after stimonset are recorded
         end
         
-        %Key press responses
-        while (GetSecs()- onset) < params.timeout %Result displayed for no more than 1 sec so responses within 1 sec taken
-            
+        %Display answer 1 sec
+        StartDrawing(s);
+        onset = GetSecs(); %starts timing this one second window that they have
+        CenterText(s,num2str(AllResults((n),4)),-30);
+        EndDrawing(s)
+        if iseeg
+        NetStation('Event','ANSW', GetSecs, 0.001,'answ',  AllResults(n,8), 'tral', n);
+        end %iseeg
+        WaitSecs(params.timeout);
+        
+        %eye blink prompt 1.5 seconds
+        StartDrawing(s);
+        DrawImg(s,fix);
+        EndDrawing(s);
+        if iseeg
+        NetStation('Event','BLNK', GetSecs, 0.001,'blank', 100000, 'tral', n);
+        end %iseeg
+        WaitSecs(params.eye);
+        
+   
+            %Key press responses
             if MultiCompatibility
                 [ pressed, firstPress]=KbQueueCheck(device); %  check if any key was pressed.
                 KbQueueFlush(device);
@@ -274,40 +280,36 @@ try
                 firstPress(find(firstPress==0))=NaN; % get rid of 0s
                 [endtime, Index]= min(firstPress); % gets the RT of the first key-press and its ID
                 
-                AllResults(i,9)=endtime-onset; % RTs added for the correspoding row i.e corresponding to displayed problem
-                AllResults(i,10)=Index; %key pressed for each problem
+                AllResults(n,9)=endtime-onset; % RTs added for the correspoding row i.e corresponding to displayed problem
+                AllResults(n,10)=Index; %key pressed for each problem
                 
                 %puts a marker for the response, depending on the type of response
-                if AllResults(i,6)==0 && AllResults(i,10)==buttonCorr{1,1};
+                if AllResults(n,6)==0 && AllResults(n,10)==buttonCorr{1,1};
+                    if iseeg
+                    NetStation('Event','HITT', endtime, 0.001,'respded', pressed, 'key', Index, 'tral', n);%hit
+                    end %iseeg
+                elseif AllResults(n,7)==0 && AllResults(n,10)==buttonWrong{1,1};
+                    if iseeg
+                    NetStation('Event','MISS', endtime, 0.001,'respded', pressed, 'key', Index, 'tral', n);%Miss
+                    end %iseeg
+                elseif AllResults(n,7)~=0 && AllResults(n,10)==buttonWrong{1,1};
+                    if iseeg
+                    NetStation('Event','CREJ', endtime, 0.001,'respded', pressed, 'key', Index, 'tral', n);%Correct Reject
+                    end %iseeg
+                elseif AllResults(n,7)~=0 && AllResults(n,10)==buttonCorr{1,1};
                     %if iseeg
-                    NetStation('Event','HITT', endtime, 0.001,'respded', pressed, 'key', Index, 'tral', i);%hit
-                    %end %iseeg
-                elseif AllResults(i,7)==0 && AllResults(i,10)==buttonWrong{1,1};
-                    %if iseeg
-                    NetStation('Event','MISS', endtime, 0.001,'respded', pressed, 'key', Index, 'tral', i);%Miss
-                    %end %iseeg
-                elseif AllResults(i,7)~=0 && AllResults(i,10)==buttonWrong{1,1};
-                    %if iseeg
-                    NetStation('Event','CREJ', endtime, 0.001,'respded', pressed, 'key', Index, 'tral', i);%Correct Reject
-                    %end %iseeg
-                elseif AllResults(i,7)~=0 && AllResults(i,10)==buttonCorr{1,1};
-                    %if iseeg
-                    NetStation('Event','FALS', endtime, 0.001,'respded', pressed, 'key', Index, 'tral', i);%False Alarm
+                    NetStation('Event','FALS', endtime, 0.001,'respded', pressed, 'key', Index, 'tral', n);%False Alarm
                     %end %iseeg
                 else
-                    %if iseeg
-                    NetStation('Event','RESP', endtime, 0.001,'respded', pressed, 'key', Index, 'tral', i);%in case they press some other key by mistake, still consider it as response. could sort it later.
-                    %end %iseeg
+                    if iseeg
+                    NetStation('Event','RESP', endtime, 0.001,'respded', pressed, 'key', Index, 'tral', n);%in case they press some other key by mistake, still consider it as response. could sort it later.
+                    end %iseeg
                 end
-                
-                
-                break;
-                
+ 
             elseif pressed == 0
-                AllResults(i,9) = NaN;%% RT will be NaN
-                AllResults(i,10) = 0;%% key ID is 0
-                
-            end
+                AllResults(n,9) = NaN;%% RT will be NaN
+                AllResults(n,10) = 0;%% key ID is 0
+
         end
         
         save(outf, 'AllResults','buttonCorr','buttonWrong','condition','params','header','iseeg');
@@ -316,9 +318,9 @@ try
     end
     %% Close NetStation
     pause(5); %wait for a bit
-    %if iseeg
+    if iseeg
     NetStation('Event','STRT', GetSecs, 0.001,'end', 9999);
-    %end %iseeg
+    end %iseeg
     mess = sprintf('End of Block. You will continue onto the next block');
     StartDrawing(s);
     CenterText(s, mess, -15)
@@ -329,15 +331,14 @@ try
     Exit();
     
     
-catch ME
-    Exit();
-    workspacevars = whos;
-    workspacevars = arrayfun(@(x) workspacevars(x).name, 1:length(workspacevars),'UniformOutput',false);
-    
-    for i = 1 : length(workspacevars)
-        workspaceStruct.(workspacevars{i}) = eval([workspacevars{i},';']);
-    end
-    warning('There was some sort of error!')
+% catch ME
+%     Exit();
+%     workspacevars = whos;
+%     workspacevars = arrayfun(@(x) workspacevars(x).name, 1:length(workspacevars),'UniformOutput',false);
+%     
+%     for n = 1 : length(workspacevars)
+%         workspaceStruct.(workspacevars{n}) = eval([workspacevars{n},';']);
+%     end
+%     warning('There was some sort of error!')
+% end
 end
-end
-
