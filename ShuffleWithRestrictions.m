@@ -69,11 +69,16 @@ try
     % now just check that everything is ok
     
     x = AllResults(:,7)';
-    
+       
+    x = x==0;
     i = find(diff(x));
     n = [i numel(x)] - [0 i];
     c = arrayfun(@(X) X-1:-1:0, n , 'UniformOutput',false);
     y = cat(2,c{:});
+    max(y)
+
+    
+    
     
     if((max(y) + 1) > maxcorrect)
         warning('oops, something is wrong with Lincoln''s code! I''l try again')
