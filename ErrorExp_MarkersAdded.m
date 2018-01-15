@@ -1,4 +1,4 @@
-function [ME,workspaceStruct] = ErrExp_latest(iseeg)
+function [ME,workspaceStruct] = ErrorExp_MarkersAdded(iseeg)
 
 workspaceStruct = struct;
 ME = [];
@@ -61,16 +61,22 @@ Screen('Preference', 'SkipSyncTests', 0);
     switch condition{1,1}%file from where trials are taken depending on condittion inputted
         case 'TP1A'
             trials=xlsread('Block1_Part1.xls');
+            block=1
         case 'TP1B'
             trials=xlsread('Block1_Part2.xls');
+            block=2
         case 'TP2A'
             trials=xlsread('Block2_Part1.xls');
+            block=3
         case 'TP2B'
             trials=xlsread('Block2_Part2.xls');
+            block=4
         case 'TP3A'
             trials=xlsread('Block3_Part1.xls');
+            block=5
         case 'TP3B'
             trials=xlsread('Block3_Part2.xls');
+            block=6
         otherwise
             error('You have not entered a valid condition!');
     end
@@ -107,8 +113,8 @@ Screen('Preference', 'SkipSyncTests', 0);
     params.order = order; % save the trial order
     
     AllResults=trials(order,:);
-    %all rows (i.e.each problem) from the sheet put in a random order
-    %here and in this order problems are displayed.
+  %all rows (i.e.each problem) from the sheet put in a random order
+  %here and in this order problems are displayed.
     
     header = {'S.no.','Op1','Op2','Result','Carry','Odd_Even','Distance','Unique Code','RT','KeyPressed','Response Type'};
     
@@ -119,8 +125,6 @@ Screen('Preference', 'SkipSyncTests', 0);
     
     %     digit 1:Time pressure condition(1/2/3)
     %     digit 2: Part 1  or Part 2 of that condition(1/2)
-    %     digit 3:carry no carry (1/0)
-    %     digit 4:corr/incorrect(0/1/4/6/9/5)
     %     digit 5 and 6: serial number(01-90)
     
     %Response type: 0 No response, 1 hitt, 2 miss, 3 corr rej, 4 false
@@ -147,7 +151,7 @@ Screen('Preference', 'SkipSyncTests', 0);
     s = MAinitGraphics();
     params.s = s; % save the screen parameters
     
-    %commandwindow(); % give command window focus. if this runs
+    commandwindow(); % give command window focus. if this runs
     %then i see the toolbar while on full screen downstaris, i dont want that.
  
     tstring=sprintf(' If you think the displayed answer is CORRECT, then you have to press the ''%s'' key \n\n If you think the displayed answer is WRONG, press the ''%s'' key. \n\n Please answer as quickly and as carefully as possible while the proposed answer is displayed.\n\n Press any key to begin.',BT,BF);
@@ -163,7 +167,7 @@ Screen('Preference', 'SkipSyncTests', 0);
         KeyWait(2);
     end
     if iseeg
-    NetStation('Event','BEGN', GetSecs, 0.001,'block', condition{1,1});
+    NetStation('Event','BEGN', GetSecs, 0.001,'block', block);
     end %iseeg
     WaitSecs(1)
     
@@ -177,20 +181,21 @@ Screen('Preference', 'SkipSyncTests', 0);
         DrawImg(s,fix);
         EndDrawing(s);
         if iseeg
-        NetStation('Event','BLNK', GetSecs, 0.001,'blank', 100000, 'tral', 1);
+        NetStation('Event','BLNK', GetSecs, 0.001,'blank', 1000, 'tral', 1);
         end %iseeg
         WaitSecs(params.eye);
     
     for n=1:r % for each row of randomised problems, will display the
         %2nd column (op1) 3rd colummn(op2) and 4th column(result)
-        %sequentially
- 
+
+
         %first operant 800ms
         StartDrawing(s);
         CenterText(s,num2str(AllResults((n),2)),-30);
         EndDrawing(s);
             if iseeg
-            NetStation('Event','OPR1', GetSecs, 0.001,'op1',  AllResults(n,8), 'tral', n);
+                
+            NetStation('Event','OPR1', GetSecs, 0.001,AllResults(n,5),  AllResults(n,8), 'tral', n);%AllResults(n,5) is carry=1, nocarry=0, (n,8) is unique code
             end %iseeg
         WaitSecs(params.op1);
        
@@ -199,7 +204,7 @@ Screen('Preference', 'SkipSyncTests', 0);
         CenterText(s,num2str(AllResults((n),3)),-30);
         EndDrawing(s);
             if iseeg
-            NetStation('Event','OPR2', GetSecs, 0.001,'op2',  AllResults(n,8), 'tral', n);
+            NetStation('Event','OPR2', GetSecs, 0.001,AllResults(n,5),  AllResults(n,8), 'tral', n);
             end %iseeg 
         WaitSecs(params.op2);
 
@@ -250,7 +255,7 @@ Screen('Preference', 'SkipSyncTests', 0);
         CenterText(s,num2str(AllResults((n),4)),-30);
         EndDrawing(s)
             if iseeg
-            NetStation('Event','ANSW', GetSecs, 0.001,'answ',  AllResults(n,8), 'tral', n);
+            NetStation('Event','ANSW', GetSecs, 0.001, AllResults(n,7),  AllResults(n,8), 'tral', n);%(n,7) is distance from answer. 
             end %iseeg
         WaitSecs(params.timeout);
         
@@ -260,7 +265,7 @@ Screen('Preference', 'SkipSyncTests', 0);
         DrawImg(s,fix);
         EndDrawing(s);
             if iseeg
-            NetStation('Event','BLNK', GetSecs, 0.001,'blank', 100000, 'tral', n+1);
+            NetStation('Event','BLNK', GetSecs, 0.001,'blank', 1000, 'tral', n+1);
             end %iseeg
         WaitSecs(params.eye);
         
@@ -286,27 +291,27 @@ Screen('Preference', 'SkipSyncTests', 0);
                 %type
                 if AllResults(n,7)==0 && AllResults(n,10)==buttonCorr{1,1};
                     if iseeg
-                    NetStation('Event','HITT', endtime, 0.001,'respded', pressed, 'key', Index, 'tral', n);%hit
+                    NetStation('Event','HITT', endtime, 0.001,'respded', pressed, 'tral', n,'key', Index);%hit
                     end %iseeg
                   AllResults(n,11)=1;
                 elseif AllResults(n,7)==0 && AllResults(n,10)==buttonWrong{1,1};
                     if iseeg
-                    NetStation('Event','MISS', endtime, 0.001,'respded', pressed, 'key', Index, 'tral', n);%Miss
+                    NetStation('Event','MISS', endtime, 0.001,'respded', pressed, 'tral', n, 'key', Index);%Miss
                     end %iseeg
                   AllResults(n,11)=2;
                 elseif AllResults(n,7)~=0 && AllResults(n,10)==buttonWrong{1,1};
                     if iseeg
-                    NetStation('Event','CREJ', endtime, 0.001,'respded', pressed, 'key', Index, 'tral', n);%Correct Reject
+                    NetStation('Event','CREJ', endtime, 0.001,'respded', pressed, 'tral', n, 'key', Index);%Correct Reject
                     end %iseeg
                   AllResults(n,11)=3;
                 elseif AllResults(n,7)~=0 && AllResults(n,10)==buttonCorr{1,1};
                     %if iseeg
-                    NetStation('Event','FALS', endtime, 0.001,'respded', pressed, 'key', Index, 'tral', n);%False Alarm
+                    NetStation('Event','FALS', endtime, 0.001,'respded', pressed, 'tral', n, 'key', Index);%False Alarm
                     %end %iseeg
                   AllResults(n,11)=4;
                 else
                     if iseeg
-                    NetStation('Event','RESP', endtime, 0.001,'respded', pressed, 'key', Index, 'tral', n);%in case they press some other key by mistake, still consider it as response. could sort it later.
+                    NetStation('Event','RESP', endtime, 0.001,'respded', pressed, 'tral', n, 'key', Index);%in case they press some other key by mistake, still consider it as response. could sort it later.
                     end %iseeg
                   AllResults(n,11)=5;
                 end
@@ -314,7 +319,7 @@ Screen('Preference', 'SkipSyncTests', 0);
             elseif pressed == 0
                 AllResults(n,9) = NaN;%% RT will be NaN
                 AllResults(n,10) = 0;%% key ID is 0
-                AllResults(n,11)=0 % nop response type
+                AllResults(n,11)=0 % no response type
 
         end
         
