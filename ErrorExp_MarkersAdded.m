@@ -7,7 +7,7 @@ params = struct; % declare a parameter struct
 MultiCompatibility = 0;
 Screen('Preference', 'SkipSyncTests', 0);
 
- try
+% try
     %%%%%%%%%%%%%%%%%%%%%%%%%
     % GENERAL EXPERIMENT PARAMETERS
     % Time pressure values
@@ -116,7 +116,7 @@ Screen('Preference', 'SkipSyncTests', 0);
   %all rows (i.e.each problem) from the sheet put in a random order
   %here and in this order problems are displayed.
     
-    header = {'S.no.','Op1','Op2','Result','Carry','Odd_Even','Distance','Unique Code','RT','KeyPressed','Response Type'};
+    header = {'S.no.','Op1','Op2','Displayed Result','Carry(1)No carry(0)','Odd(1)Even(2)','Distance from correct answer','Unique Code','RT','KeyPressed','Response Type'};
     
     % Carry: 1 = Carry; 0 = No Carry
     % Odd_Even: 1 = Odd; 2 = Even
@@ -137,7 +137,7 @@ Screen('Preference', 'SkipSyncTests', 0);
     end
     outf = [pwd filesep 'data' filesep subject '-' sprintf('%4d%2d-%2d%2d%2',results.startTime(1:5)),'.mat'];
    
-    % example file: 006_1_1-20171106-1542 . subject code(006), time pressure condition(1) part(1) followed by date and time
+    % example file: 006_1_2-20171106-1542 . subject code(006), time pressure condition 1/2/3 (1)  part 1 or 2 (2) followed by date and time
     
     %% Connect to Net Station
     if iseeg
@@ -151,14 +151,16 @@ Screen('Preference', 'SkipSyncTests', 0);
     s = MAinitGraphics();
     params.s = s; % save the screen parameters
     
-    commandwindow(); % give command window focus. if this runs
+    %commandwindow(); % give command window focus. if this runs
     %then i see the toolbar while on full screen downstaris, i dont want that.
  
     tstring=sprintf(' If you think the displayed answer is CORRECT, then you have to press the ''%s'' key \n\n If you think the displayed answer is WRONG, press the ''%s'' key. \n\n Please answer as quickly and as carefully as possible while the proposed answer is displayed.\n\n Press any key to begin.',BT,BF);
    
     StartDrawing(s);
     DrawFormattedText(s.w,tstring,'center','center',[255 255 255], 74);
+      KeyWait(2);
     EndDrawing(s);
+   
     if MultiCompatibility
         WaitKey(device);
         KbQueueStart(device);
@@ -195,7 +197,7 @@ Screen('Preference', 'SkipSyncTests', 0);
         EndDrawing(s);
             if iseeg
                 
-            NetStation('Event','OPR1', GetSecs, 0.001,AllResults(n,5),  AllResults(n,8), 'tral', n);%AllResults(n,5) is carry=1, nocarry=0, (n,8) is unique code
+            NetStation('Event','OPR1', GetSecs, 0.001,'cary',AllResults(n,5),'code',  AllResults(n,8), 'tral', n);%AllResults(n,5) is carry=1, nocarry=0, (n,8) is unique code
             end %iseeg
         WaitSecs(params.op1);
        
@@ -204,7 +206,7 @@ Screen('Preference', 'SkipSyncTests', 0);
         CenterText(s,num2str(AllResults((n),3)),-30);
         EndDrawing(s);
             if iseeg
-            NetStation('Event','OPR2', GetSecs, 0.001,AllResults(n,5),  AllResults(n,8), 'tral', n);
+            NetStation('Event','OPR2', GetSecs, 0.001,'cary',AllResults(n,5),'code',  AllResults(n,8), 'tral', n);
             end %iseeg 
         WaitSecs(params.op2);
 
@@ -216,7 +218,7 @@ Screen('Preference', 'SkipSyncTests', 0);
             CenterText(s,k,-30);
             EndDrawing(s);
                 if iseeg
-                NetStation('Event','EQUL', GetSecs, 0.001,'sign',  AllResults(n,8), 'tral', n);
+                NetStation('Event','EQUL', GetSecs, 0.001,'sign',555,'code',  AllResults(n,8), 'tral', n);
                 end %iseeg
             WaitSecs(params.tp1);
             
@@ -226,7 +228,7 @@ Screen('Preference', 'SkipSyncTests', 0);
             CenterText(s,k,-30);
             EndDrawing(s);
                 if iseeg
-                NetStation('Event','EQUL', GetSecs, 0.001,'sign',  AllResults(n,8), 'tral', n);
+                NetStation('Event','EQUL', GetSecs, 0.001,'sign', 555,'code', AllResults(n,8), 'tral', n);
                 end %iseeg
             WaitSecs(params.tp2);
             
@@ -236,7 +238,7 @@ Screen('Preference', 'SkipSyncTests', 0);
             CenterText(s,k,-30);
             EndDrawing(s);
                 if iseeg
-                NetStation('Event','EQUL', GetSecs, 0.001,'sign',  AllResults(n,8), 'tral', n);
+                NetStation('Event','EQUL', GetSecs, 0.001,'sign', 555,'code', AllResults(n,8), 'tral', n);
                 end %iseeg
             WaitSecs(params.tp3);
         end
@@ -255,7 +257,7 @@ Screen('Preference', 'SkipSyncTests', 0);
         CenterText(s,num2str(AllResults((n),4)),-30);
         EndDrawing(s)
             if iseeg
-            NetStation('Event','ANSW', GetSecs, 0.001, AllResults(n,7),  AllResults(n,8), 'tral', n);%(n,7) is distance from answer. 
+            NetStation('Event','ANSW', GetSecs, 0.001,'dist', AllResults(n,7),'code',  AllResults(n,8), 'tral', n);%(n,7) is distance from answer. 
             end %iseeg
         WaitSecs(params.timeout);
         
@@ -265,7 +267,7 @@ Screen('Preference', 'SkipSyncTests', 0);
         DrawImg(s,fix);
         EndDrawing(s);
             if iseeg
-            NetStation('Event','BLNK', GetSecs, 0.001,'blank', 1000, 'tral', n+1);
+            NetStation('Event','BLNK', GetSecs, 0.001,'blank', 1000,'blank',1000, 'tral', n+1);
             end %iseeg
         WaitSecs(params.eye);
         
@@ -291,27 +293,27 @@ Screen('Preference', 'SkipSyncTests', 0);
                 %type
                 if AllResults(n,7)==0 && AllResults(n,10)==buttonCorr{1,1};
                     if iseeg
-                    NetStation('Event','HITT', endtime, 0.001,'respded', pressed, 'tral', n,'key', Index);%hit
+                    NetStation('Event','HITT', endtime, 0.001,'respded', pressed, 'key', Index,'tral', n);%hit
                     end %iseeg
                   AllResults(n,11)=1;
                 elseif AllResults(n,7)==0 && AllResults(n,10)==buttonWrong{1,1};
                     if iseeg
-                    NetStation('Event','MISS', endtime, 0.001,'respded', pressed, 'tral', n, 'key', Index);%Miss
+                    NetStation('Event','MISS', endtime, 0.001,'respded', pressed, 'key', Index, 'tral', n);%Miss
                     end %iseeg
                   AllResults(n,11)=2;
                 elseif AllResults(n,7)~=0 && AllResults(n,10)==buttonWrong{1,1};
                     if iseeg
-                    NetStation('Event','CREJ', endtime, 0.001,'respded', pressed, 'tral', n, 'key', Index);%Correct Reject
+                    NetStation('Event','CREJ', endtime, 0.001,'respded', pressed, 'key', Index, 'tral', n);%Correct Reject
                     end %iseeg
                   AllResults(n,11)=3;
                 elseif AllResults(n,7)~=0 && AllResults(n,10)==buttonCorr{1,1};
                     %if iseeg
-                    NetStation('Event','FALS', endtime, 0.001,'respded', pressed, 'tral', n, 'key', Index);%False Alarm
+                    NetStation('Event','FALS', endtime, 0.001,'respded', pressed, 'key', Index, 'tral', n);%False Alarm
                     %end %iseeg
                   AllResults(n,11)=4;
                 else
                     if iseeg
-                    NetStation('Event','RESP', endtime, 0.001,'respded', pressed, 'tral', n, 'key', Index);%in case they press some other key by mistake, still consider it as response. could sort it later.
+                    NetStation('Event','RESP', endtime, 0.001,'respded', pressed, 'key', Index, 'tral', n);%in case they press some other key by mistake, still consider it as response. could sort it later.
                     end %iseeg
                   AllResults(n,11)=5;
                 end
@@ -341,14 +343,14 @@ Screen('Preference', 'SkipSyncTests', 0);
     Exit();
     
     
-catch ME
-    Exit();
-    workspacevars = whos;
-    workspacevars = arrayfun(@(x) workspacevars(x).name, 1:length(workspacevars),'UniformOutput',false);
-    
-    for n = 1 : length(workspacevars)
-        workspaceStruct.(workspacevars{n}) = eval([workspacevars{n},';']);
-    end
-    warning('There was some sort of error!')
-end
+% catch ME
+%     Exit();
+%     workspacevars = whos;
+%     workspacevars = arrayfun(@(x) workspacevars(x).name, 1:length(workspacevars),'UniformOutput',false);
+%     
+%     for n = 1 : length(workspacevars)
+%         workspaceStruct.(workspacevars{n}) = eval([workspacevars{n},';']);
+%     end
+%     warning('There was some sort of error!')
+% end
 end
